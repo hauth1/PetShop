@@ -6,6 +6,7 @@ namespace PetShop.Controllers
 {
     public class HomeController : Controller
     {
+        //hello
         private readonly ILogger<HomeController> _logger;
 
         public HomeController(ILogger<HomeController> logger)
