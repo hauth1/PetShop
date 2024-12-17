@@ -1,38 +1,32 @@
 ﻿@model PetShop.Models.NuocXuatXu
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Thêm nước xuất xứ";
 }
 
-<h1>Create</h1>
-
-<h4>NuocXuatXu</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
+<div class="card">
+    <h5 class="card-header">@ViewData["Title"]</h5>
+    <div class="card-body">
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
+            <div class="mb-3">
                 <label asp-for="TenNuocXuatXu" class="control-label"></label>
                 <input asp-for="TenNuocXuatXu" class="form-control" />
                 <span asp-validation-for="TenNuocXuatXu" class="text-danger"></span>
             </div>
-            <div class="form-group">
+            <div class="mb-3">
                 <label asp-for="TenNuocXuatXuKhongDau" class="control-label"></label>
-                <input asp-for="TenNuocXuatXuKhongDau" class="form-control" />
+                <input asp-for="TenNuocXuatXuKhongDau" class="form-control" placeholder="Bỏ trống sẽ tự động xử lý tên không dấu" />
                 <span asp-validation-for="TenNuocXuatXuKhongDau" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+            <div class="mb-0">
+                <button type="submit" class="btn btn-primary"><i class="fa-light fa-floppy-disk"></i> Thêm mới</button> hoặc <a asp-action="Index">Quay về danh sách</a>
             </div>
         </form>
     </div>
 </div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

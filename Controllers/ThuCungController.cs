@@ -5,17 +5,21 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using PetShop.Models;
+using SlugGenerator;
 
 namespace PetShop.Controllers
 {
     public class ThuCungController : Controller
     {
         private readonly PetShopDbContext _context;
+        private readonly IWebHostEnvironment _hostEnvironment;
 
-        public ThuCungController(PetShopDbContext context)
+        public ThuCungController(PetShopDbContext context, IWebHostEnvironment hostEnvironment)
         {
             _context = context;
+            _hostEnvironment = hostEnvironment;
         }
 
         // GET: ThuCung
@@ -47,7 +51,8 @@ namespace PetShop.Controllers
         // GET: ThuCung/Create
         public IActionResult Create()
         {
-            ViewData["LoaiThuCungID"] = new SelectList(_context.LoaiThuCung, "ID", "ID");
+            ViewData["TenNuocXuatXuID"] = new SelectList(_context.NuocXuatXu, "ID", "TenNuocXuatXu");
+            ViewData["LoaiThuCungID"] = new SelectList(_context.LoaiThuCung, "ID", "TenLoaiTC");
             return View();
         }
 
@@ -56,15 +61,38 @@ namespace PetShop.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ID,TenNuocXuatXuID,LoaiThuCungID,TenThuCung,TenThuCungKhongDau,Giong,Tuoi,GioiTinh,MauSac,TinhTrangSucKhoe,DonGia,SoLuong,HinhAnh,MoTa")] ThuCung thuCung)
+        public async Task<IActionResult> Create([Bind("ID,TenNuocXuatXuID,LoaiThuCungID,TenThuCung,TenThuCungKhongDau,Giong,Tuoi,GioiTinh,MauSac,TinhTrangSucKhoe,DonGia,SoLuong,DuLieuHinhAnh,MoTa")] ThuCung thuCung)
         {
             if (ModelState.IsValid)
             {
+                if (string.IsNullOrWhiteSpace(thuCung.TenThuCungKhongDau))
+                {
+                    thuCung.TenThuCungKhongDau = thuCung.TenThuCung.GenerateSlug();
+                }
+                string path = "";
+                // Nếu hình ảnh không bỏ trống thì upload
+                if (thuCung.DuLieuHinhAnh != null)
+                {
+                    string wwwRootPath = _hostEnvironment.WebRootPath;
+                    string folder = "/uploads/";
+                    string fileExtension = Path.GetExtension(thuCung.DuLieuHinhAnh.FileName).ToLower();
+                    string fileName = thuCung.TenThuCung;
+                    string fileNameSluged = fileName.GenerateSlug();
+                    path = fileNameSluged + fileExtension;
+                    string physicalPath = Path.Combine(wwwRootPath + folder, fileNameSluged + fileExtension);
+                    using (var fileStream = new FileStream(physicalPath, FileMode.Create))
+                    {
+                        await thuCung.DuLieuHinhAnh.CopyToAsync(fileStream);
+                    }
+                } 
+                // Cập nhật đường dẫn vào CSDL
+                thuCung.HinhAnh = path ?? null;
                 _context.Add(thuCung);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["LoaiThuCungID"] = new SelectList(_context.LoaiThuCung, "ID", "ID", thuCung.LoaiThuCungID);
+            ViewData["LoaiThuCungID"] = new SelectList(_context.LoaiThuCung, "ID", "TenLoaiTC", thuCung.LoaiThuCungID);
+            ViewData["TenNuocXuatXuID"] = new SelectList(_context.NuocXuatXu, "ID", "TenNuocXuatXu", thuCung.TenNuocXuatXuID);
             return View(thuCung);
         }
 
@@ -81,7 +109,8 @@ namespace PetShop.Controllers
             {
                 return NotFound();
             }
-            ViewData["LoaiThuCungID"] = new SelectList(_context.LoaiThuCung, "ID", "ID", thuCung.LoaiThuCungID);
+            ViewData["LoaiThuCungID"] = new SelectList(_context.LoaiThuCung, "ID", "TenLoaiTC", thuCung.LoaiThuCungID);
+            ViewData["TenNuocXuatXuID"] = new SelectList(_context.NuocXuatXu, "ID", "TenNuocXuatXu", thuCung.TenNuocXuatXuID);
             return View(thuCung);
         }
 
@@ -90,7 +119,7 @@ namespace PetShop.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ID,TenNuocXuatXuID,LoaiThuCungID,TenThuCung,TenThuCungKhongDau,Giong,Tuoi,GioiTinh,MauSac,TinhTrangSucKhoe,DonGia,SoLuong,HinhAnh,MoTa")] ThuCung thuCung)
+        public async Task<IActionResult> Edit(int id, [Bind("ID,TenNuocXuatXuID,LoaiThuCungID,TenThuCung,TenThuCungKhongDau,Giong,Tuoi,GioiTinh,MauSac,TinhTrangSucKhoe,DonGia,SoLuong,DuLieuHinhAnh,MoTa")] ThuCung thuCung)
         {
             if (id != thuCung.ID)
             {
@@ -101,7 +130,32 @@ namespace PetShop.Controllers
             {
                 try
                 {
+                    if (string.IsNullOrWhiteSpace(thuCung.TenThuCungKhongDau))
+                    {
+                        thuCung.TenThuCungKhongDau = thuCung.TenThuCung.GenerateSlug();
+                    }
+
+                    string path = "";
+                    // Nếu hình ảnh không bỏ trống thì upload ảnh mới
+                    if (thuCung.DuLieuHinhAnh != null)
+                    {
+                        string wwwRootPath = _hostEnvironment.WebRootPath;
+                        string folder = "/uploads/";
+                        string fileExtension = Path.GetExtension(thuCung.DuLieuHinhAnh.FileName).ToLower();
+                        string fileName = thuCung.TenThuCung;
+                        string fileNameSluged = fileName.GenerateSlug();
+                        path = fileNameSluged + fileExtension;
+                        string physicalPath = Path.Combine(wwwRootPath + folder, fileNameSluged + fileExtension);
+                        using (var fileStream = new FileStream(physicalPath, FileMode.Create))
+                        {
+                            await thuCung.DuLieuHinhAnh.CopyToAsync(fileStream);
+                        }
+                    }
                     _context.Update(thuCung);
+                    if (string.IsNullOrEmpty(path))
+                        _context.Entry(thuCung).Property(x => x.HinhAnh).IsModified = false;
+                    else
+                        thuCung.HinhAnh = path;
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -117,7 +171,8 @@ namespace PetShop.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["LoaiThuCungID"] = new SelectList(_context.LoaiThuCung, "ID", "ID", thuCung.LoaiThuCungID);
+            ViewData["LoaiThuCungID"] = new SelectList(_context.LoaiThuCung, "ID", "TenLoaiTC", thuCung.LoaiThuCungID);
+            ViewData["TenNuocXuatXuID"] = new SelectList(_context.NuocXuatXu, "ID", "TenNuocXuatXu", thuCung.TenNuocXuatXuID);
             return View(thuCung);
         }
 
@@ -148,6 +203,11 @@ namespace PetShop.Controllers
             var thuCung = await _context.ThuCung.FindAsync(id);
             if (thuCung != null)
             {
+                if (!string.IsNullOrEmpty(thuCung.HinhAnh))
+                {
+                    var imagePath = Path.Combine(_hostEnvironment.WebRootPath, "uploads", thuCung.HinhAnh);
+                    if (System.IO.File.Exists(imagePath)) System.IO.File.Delete(imagePath);
+                }
                 _context.ThuCung.Remove(thuCung);
             }
 

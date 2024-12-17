@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using SlugGenerator;
 using PetShop.Models;
 
 namespace PetShop.Controllers
@@ -12,10 +13,12 @@ namespace PetShop.Controllers
     public class SanPhamController : Controller
     {
         private readonly PetShopDbContext _context;
+        private readonly IWebHostEnvironment _hostEnvironment;
 
-        public SanPhamController(PetShopDbContext context)
+        public SanPhamController(PetShopDbContext context, IWebHostEnvironment hostEnvironment)
         {
             _context = context;
+            _hostEnvironment = hostEnvironment;
         }
 
         // GET: SanPham
@@ -47,7 +50,7 @@ namespace PetShop.Controllers
         // GET: SanPham/Create
         public IActionResult Create()
         {
-            ViewData["LoaiSanPhamID"] = new SelectList(_context.LoaiSanPham, "ID", "ID");
+            ViewData["LoaiSanPhamID"] = new SelectList(_context.LoaiSanPham, "ID", "TenLoaiSP");
             return View();
         }
 
@@ -56,15 +59,37 @@ namespace PetShop.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ID,LoaiSanPhamID,TenSanPham,TenSanPhamKhongDau,DonGia,SoLuong,HinhAnh,MoTa")] SanPham sanPham)
+        public async Task<IActionResult> Create([Bind("ID,LoaiSanPhamID,TenSanPham,TenSanPhamKhongDau,DonGia,SoLuong,DuLieuHinhAnh,MoTa")] SanPham sanPham)
         {
             if (ModelState.IsValid)
             {
+                if (string.IsNullOrWhiteSpace(sanPham.TenSanPhamKhongDau))
+                {
+                    sanPham.TenSanPhamKhongDau = sanPham.TenSanPham.GenerateSlug();
+                }
+                string path = "";
+                // Nếu hình ảnh không bỏ trống thì upload
+                if (sanPham.DuLieuHinhAnh != null)
+                {
+                    string wwwRootPath = _hostEnvironment.WebRootPath;
+                    string folder = "/uploads/";
+                    string fileExtension = Path.GetExtension(sanPham.DuLieuHinhAnh.FileName).ToLower();
+                    string fileName = sanPham.TenSanPham;
+                    string fileNameSluged = fileName.GenerateSlug();
+                    path = fileNameSluged + fileExtension;
+                    string physicalPath = Path.Combine(wwwRootPath + folder, fileNameSluged + fileExtension);
+                    using (var fileStream = new FileStream(physicalPath, FileMode.Create))
+                    {
+                        await sanPham.DuLieuHinhAnh.CopyToAsync(fileStream);
+                    }
+                }
+                // Cập nhật đường dẫn vào CSDL
+                sanPham.HinhAnh = path ?? null;
                 _context.Add(sanPham);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["LoaiSanPhamID"] = new SelectList(_context.LoaiSanPham, "ID", "ID", sanPham.LoaiSanPhamID);
+            ViewData["LoaiSanPhamID"] = new SelectList(_context.LoaiSanPham, "ID", "TenLoaiSP", sanPham.LoaiSanPhamID);
             return View(sanPham);
         }
 
@@ -81,7 +106,7 @@ namespace PetShop.Controllers
             {
                 return NotFound();
             }
-            ViewData["LoaiSanPhamID"] = new SelectList(_context.LoaiSanPham, "ID", "ID", sanPham.LoaiSanPhamID);
+            ViewData["LoaiSanPhamID"] = new SelectList(_context.LoaiSanPham, "ID", "TenLoaiSP", sanPham.LoaiSanPhamID);
             return View(sanPham);
         }
 
@@ -90,7 +115,7 @@ namespace PetShop.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ID,LoaiSanPhamID,TenSanPham,TenSanPhamKhongDau,DonGia,SoLuong,HinhAnh,MoTa")] SanPham sanPham)
+        public async Task<IActionResult> Edit(int id, [Bind("ID,LoaiSanPhamID,TenSanPham,TenSanPhamKhongDau,DonGia,SoLuong,DuLieuHinhAnh,MoTa")] SanPham sanPham)
         {
             if (id != sanPham.ID)
             {
@@ -101,7 +126,31 @@ namespace PetShop.Controllers
             {
                 try
                 {
+                    if (string.IsNullOrWhiteSpace(sanPham.TenSanPhamKhongDau))
+                    {
+                        sanPham.TenSanPhamKhongDau = sanPham.TenSanPham.GenerateSlug();
+                    }
+                    string path = "";
+                    // Nếu hình ảnh không bỏ trống thì upload ảnh mới
+                    if (sanPham.DuLieuHinhAnh != null)
+                    {
+                        string wwwRootPath = _hostEnvironment.WebRootPath;
+                        string folder = "/uploads/";
+                        string fileExtension = Path.GetExtension(sanPham.DuLieuHinhAnh.FileName).ToLower();
+                        string fileName = sanPham.TenSanPham;
+                        string fileNameSluged = fileName.GenerateSlug();
+                        path = fileNameSluged + fileExtension;
+                        string physicalPath = Path.Combine(wwwRootPath + folder, fileNameSluged + fileExtension);
+                        using (var fileStream = new FileStream(physicalPath, FileMode.Create))
+                        {
+                            await sanPham.DuLieuHinhAnh.CopyToAsync(fileStream);
+                        }
+                    }
                     _context.Update(sanPham);
+                    if (string.IsNullOrEmpty(path))
+                        _context.Entry(sanPham).Property(x => x.HinhAnh).IsModified = false;
+                    else
+                        sanPham.HinhAnh = path;
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -117,7 +166,7 @@ namespace PetShop.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["LoaiSanPhamID"] = new SelectList(_context.LoaiSanPham, "ID", "ID", sanPham.LoaiSanPhamID);
+            ViewData["LoaiSanPhamID"] = new SelectList(_context.LoaiSanPham, "ID", "TenLoaiSP", sanPham.LoaiSanPhamID);
             return View(sanPham);
         }
 
@@ -148,6 +197,12 @@ namespace PetShop.Controllers
             var sanPham = await _context.SanPham.FindAsync(id);
             if (sanPham != null)
             {
+                // Xóa hình ảnh (nếu có)
+                if (!string.IsNullOrEmpty(sanPham.HinhAnh))
+                {
+                    var imagePath = Path.Combine(_hostEnvironment.WebRootPath, "uploads", sanPham.HinhAnh);
+                    if (System.IO.File.Exists(imagePath)) System.IO.File.Delete(imagePath);
+                }
                 _context.SanPham.Remove(sanPham);
             }
 

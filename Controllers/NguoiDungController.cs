@@ -6,8 +6,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using PetShop.Models;
+//using BC = BCrypt.Net.BCrypt;
+using Microsoft.AspNetCore.Authorization;
 
-namespace PetShop.Controllers
+namespace ITShop.Areas.Admin.Controllers
 {
     public class NguoiDungController : Controller
     {
@@ -53,10 +55,13 @@ namespace PetShop.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ID,HoVaTen,Email,DienThoai,DiaChi,TenDangNhap,MatKhau,Quyen")] NguoiDung nguoiDung)
+        public async Task<IActionResult> Create([Bind("ID,HoVaTen,Email,DienThoai,DiaChi,TenDangNhap,MatKhau,XacNhanMatKhau,Quyen")] NguoiDung nguoiDung)
         {
             if (ModelState.IsValid)
             {
+                //nguoiDung.MatKhau = BC.HashPassword(nguoiDung.MatKhau);
+                nguoiDung.XacNhanMatKhau = nguoiDung.MatKhau;
+
                 _context.Add(nguoiDung);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -77,7 +82,7 @@ namespace PetShop.Controllers
             {
                 return NotFound();
             }
-            return View(nguoiDung);
+            return View(new NguoiDung_ChinhSua(nguoiDung));
         }
 
         // POST: NguoiDung/Edit/5
@@ -85,7 +90,7 @@ namespace PetShop.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ID,HoVaTen,Email,DienThoai,DiaChi,TenDangNhap,MatKhau,Quyen")] NguoiDung nguoiDung)
+        public async Task<IActionResult> Edit(int id, [Bind("ID,HoVaTen,Email,DienThoai,DiaChi,TenDangNhap,MatKhau,XacNhanMatKhau,Quyen")] NguoiDung_ChinhSua nguoiDung)
         {
             if (id != nguoiDung.ID)
             {
@@ -96,7 +101,33 @@ namespace PetShop.Controllers
             {
                 try
                 {
-                    _context.Update(nguoiDung);
+                    var n = await _context.NguoiDung.FindAsync(id);
+
+                    // Giữ nguyên mật khẩu cũ
+                    if (nguoiDung.MatKhau == null)
+                    {
+                        n.ID = nguoiDung.ID;
+                        n.HoVaTen = nguoiDung.HoVaTen;
+                        n.DienThoai = nguoiDung.DienThoai;
+                        n.DiaChi = nguoiDung.DiaChi;
+                        n.TenDangNhap = nguoiDung.TenDangNhap;
+                        n.XacNhanMatKhau = n.MatKhau;
+                        n.Quyen = nguoiDung.Quyen;
+                    }
+                    else // Cập nhật mật khẩu mới
+                    {
+                        n.ID = nguoiDung.ID;
+                        n.HoVaTen = nguoiDung.HoVaTen;
+                        n.DienThoai = nguoiDung.DienThoai;
+                        n.DiaChi = nguoiDung.DiaChi;
+                        n.TenDangNhap = nguoiDung.TenDangNhap;
+                        n.MatKhau = nguoiDung.MatKhau;
+                        n.XacNhanMatKhau = n.MatKhau;
+                        n.Quyen = nguoiDung.Quyen;
+                    }
+                    _context.Update(n);
+
+                    //_context.Update(nguoiDung);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)

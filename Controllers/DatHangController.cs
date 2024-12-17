@@ -48,8 +48,8 @@ namespace PetShop.Controllers
         // GET: DatHang/Create
         public IActionResult Create()
         {
-            ViewData["NguoiDungID"] = new SelectList(_context.NguoiDung, "ID", "ID");
-            ViewData["TinhTrangID"] = new SelectList(_context.TinhTrang, "ID", "ID");
+            ViewData["NguoiDungID"] = new SelectList(_context.NguoiDung, "ID", "HoVaTen");
+            ViewData["TinhTrangID"] = new SelectList(_context.TinhTrang, "ID", "MoTa");
             return View();
         }
 
@@ -66,8 +66,8 @@ namespace PetShop.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["NguoiDungID"] = new SelectList(_context.NguoiDung, "ID", "ID", datHang.NguoiDungID);
-            ViewData["TinhTrangID"] = new SelectList(_context.TinhTrang, "ID", "ID", datHang.TinhTrangID);
+            ViewData["NguoiDungID"] = new SelectList(_context.NguoiDung, "ID", "HoVaTen", datHang.NguoiDungID);
+            ViewData["TinhTrangID"] = new SelectList(_context.TinhTrang, "ID", "MoTa", datHang.TinhTrangID);
             return View(datHang);
         }
 
@@ -84,8 +84,8 @@ namespace PetShop.Controllers
             {
                 return NotFound();
             }
-            ViewData["NguoiDungID"] = new SelectList(_context.NguoiDung, "ID", "ID", datHang.NguoiDungID);
-            ViewData["TinhTrangID"] = new SelectList(_context.TinhTrang, "ID", "ID", datHang.TinhTrangID);
+            ViewData["NguoiDungID"] = new SelectList(_context.NguoiDung, "ID", "HoVaTen", datHang.NguoiDungID);
+            ViewData["TinhTrangID"] = new SelectList(_context.TinhTrang, "ID", "MoTa", datHang.TinhTrangID);
             return View(datHang);
         }
 
@@ -121,8 +121,8 @@ namespace PetShop.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["NguoiDungID"] = new SelectList(_context.NguoiDung, "ID", "ID", datHang.NguoiDungID);
-            ViewData["TinhTrangID"] = new SelectList(_context.TinhTrang, "ID", "ID", datHang.TinhTrangID);
+            ViewData["NguoiDungID"] = new SelectList(_context.NguoiDung, "ID", "HoVaTen", datHang.NguoiDungID);
+            ViewData["TinhTrangID"] = new SelectList(_context.TinhTrang, "ID", "MoTa", datHang.TinhTrangID);
             return View(datHang);
         }
 

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using PetShop.Models;
+using SlugGenerator;
 
 namespace PetShop.Controllers
 {
@@ -57,6 +58,10 @@ namespace PetShop.Controllers
         {
             if (ModelState.IsValid)
             {
+                if (string.IsNullOrWhiteSpace(nuocXuatXu.TenNuocXuatXuKhongDau))
+                {
+                    nuocXuatXu.TenNuocXuatXuKhongDau = nuocXuatXu.TenNuocXuatXu.GenerateSlug();
+                }
                 _context.Add(nuocXuatXu);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -96,6 +101,10 @@ namespace PetShop.Controllers
             {
                 try
                 {
+                    if (string.IsNullOrWhiteSpace(nuocXuatXu.TenNuocXuatXuKhongDau))
+                    {
+                        nuocXuatXu.TenNuocXuatXuKhongDau = nuocXuatXu.TenNuocXuatXu.GenerateSlug();
+                    }
                     _context.Update(nuocXuatXu);
                     await _context.SaveChangesAsync();
                 }
