@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq.Dynamic.Core;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -25,10 +26,89 @@ namespace PetShop.Controllers
         // GET: ThuCung
         public async Task<IActionResult> Index()
         {
-            var petShopDbContext = _context.ThuCung.Include(t => t.LoaiThuCung);
+            var petShopDbContext = _context.ThuCung.Include(t => t.LoaiThuCung).Include(t => t.NuocXuatXu);
             return View(await petShopDbContext.ToListAsync());
+
+            //return View();
         }
 
+        /*
+        [HttpPost]
+        public async Task<IActionResult> Index_LoadData()
+        {
+            try
+            {
+                var draw = Request.Form["draw"].FirstOrDefault();
+                var start = Request.Form["start"].FirstOrDefault();
+                var length = Request.Form["length"].FirstOrDefault();
+                var sortColumn = Request.Form["columns[" + Request.Form["order[0][column]"].FirstOrDefault() + "][name]"].FirstOrDefault();
+                var sortColumnDirection = Request.Form["order[0][dir]"].FirstOrDefault();
+                var searchValue = Request.Form["search[value]"].FirstOrDefault();
+
+                int pageSize = length != null ? int.Parse(length) : 0;
+                int skip = start != null ? int.Parse(start) : 0;
+                int totalRecords = 0;
+                int filterRecords = 0;
+
+
+
+                var thuCung = from r in _context.ThuCung
+                              select new
+                              {
+                                  r.ID,
+                                  r.HinhAnh,
+                                  r.LoaiThuCung.TenLoaiTC,
+                                  r.NuocXuatXu.TenNuocXuatXu,
+                                  r.TenThuCung,
+                                  r.Giong,
+                                  r.Tuoi,
+                                  r.GioiTinh,
+                                  r.MauSac,
+                                  r.TinhTrangSucKhoe,
+                                  r.SoLuong,
+                                  r.DonGia
+                              };
+
+                totalRecords = thuCung.Count();
+
+                // Sắp xếp 
+                if (!string.IsNullOrEmpty(sortColumn) && !string.IsNullOrEmpty(sortColumnDirection))
+                {
+                    thuCung = thuCung.OrderBy(sortColumn + " " + sortColumnDirection);
+                }
+
+                // Tìm kiếm 
+                if (!string.IsNullOrEmpty(searchValue) && !string.IsNullOrWhiteSpace(searchValue))
+                {
+                    thuCung = thuCung.Where(r => r.TenLoaiTC.Contains(searchValue) ||
+                        r.TenNuocXuatXu.Contains(searchValue) ||
+                        r.TenThuCung.Contains(searchValue) ||
+                        r.Giong.Contains(searchValue) ||
+                        r.Tuoi.ToString().Contains(searchValue) ||
+                        r.GioiTinh.Contains(searchValue) ||
+                        r.TinhTrangSucKhoe.Contains(searchValue) ||
+                        r.SoLuong.ToString().Contains(searchValue) ||
+                        r.DonGia.ToString().Contains(searchValue));
+                }
+
+                filterRecords = thuCung.Count();
+                var data = thuCung.Skip(skip).Take(pageSize).ToList();
+                var jsonData = new
+                {
+                    draw,
+                    recordsFiltered = filterRecords,
+                    recordsTotal = totalRecords,
+                    data
+                };
+
+                return Json(jsonData, new System.Text.Json.JsonSerializerOptions());
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+        */
         // GET: ThuCung/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -55,6 +135,8 @@ namespace PetShop.Controllers
             ViewData["LoaiThuCungID"] = new SelectList(_context.LoaiThuCung, "ID", "TenLoaiTC");
             return View();
         }
+
+
 
         // POST: ThuCung/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.

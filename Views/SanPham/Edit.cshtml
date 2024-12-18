@@ -42,8 +42,8 @@
                 {
                     <span class="d-block mb-2"><img src="~/uploads/@Model.HinhAnh" width="80" class="img-thumbnail" /></span>
                     <span class="d-block mb-2 mt-2 small text-danger">Bỏ trống nếu không muốn cập nhật ảnh mới!</span>
-                }<
-                label asp-for="DuLieuHinhAnh" class="control-label"></label>
+                }
+                <label asp-for="DuLieuHinhAnh" class="control-label"></label>
                 <input asp-for="DuLieuHinhAnh" accept="image/jpeg,image/gif,image/png" class="form-control" />
                 <span asp-validation-for="DuLieuHinhAnh" class="text-danger"></span>
             </div>
@@ -54,7 +54,7 @@
             </div>
             <div class="mb-3">
                 <label asp-for="MoTa" class="control-label"></label>
-<textarea asp-for="MoTa" class="form-control"></textarea>
+                <textarea asp-for="MoTa" class="form-control"></textarea>
                 <span asp-validation-for="MoTa" class="text-danger"></span>
             </div>
             <div class="mb-0">
@@ -64,7 +64,15 @@
     </div>
 </div>
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+        <script src="~/lib/ckeditor5/ckeditor.js"></script>
+        <script>
+            ClassicEditor.create(document.querySelector('#MoTa'), {
+            licenseKey: '',
+            }).then(editor => {
+            window.editor = editor;
+            }).catch(error => {
+            console.error(error);
+            });
+        </script>
 }

@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using PetShop.Models;
-//using BC = BCrypt.Net.BCrypt;
+using BC = BCrypt.Net.BCrypt;
 using Microsoft.AspNetCore.Authorization;
 
 namespace ITShop.Areas.Admin.Controllers
@@ -59,7 +59,7 @@ namespace ITShop.Areas.Admin.Controllers
         {
             if (ModelState.IsValid)
             {
-                //nguoiDung.MatKhau = BC.HashPassword(nguoiDung.MatKhau);
+                nguoiDung.MatKhau = BC.HashPassword(nguoiDung.MatKhau);
                 nguoiDung.XacNhanMatKhau = nguoiDung.MatKhau;
 
                 _context.Add(nguoiDung);
@@ -121,7 +121,7 @@ namespace ITShop.Areas.Admin.Controllers
                         n.DienThoai = nguoiDung.DienThoai;
                         n.DiaChi = nguoiDung.DiaChi;
                         n.TenDangNhap = nguoiDung.TenDangNhap;
-                        n.MatKhau = nguoiDung.MatKhau;
+                        n.MatKhau = BC.HashPassword(nguoiDung.MatKhau);
                         n.XacNhanMatKhau = n.MatKhau;
                         n.Quyen = nguoiDung.Quyen;
                     }
