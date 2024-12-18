@@ -9,9 +9,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using PetShop.Models;
 using SlugGenerator;
+using Microsoft.AspNetCore.Authorization;
 
-namespace PetShop.Controllers
+namespace PetShop.Areas.Admin.Controllers
 {
+    [Area("Admin")]
+    [Authorize(Roles = "Admin")]
     public class ThuCungController : Controller
     {
         private readonly PetShopDbContext _context;

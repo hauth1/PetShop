@@ -9,8 +9,10 @@ using PetShop.Models;
 using BC = BCrypt.Net.BCrypt;
 using Microsoft.AspNetCore.Authorization;
 
-namespace ITShop.Areas.Admin.Controllers
+namespace PetShop.Areas.Admin.Controllers
 {
+    [Area("Admin")]
+    [Authorize(Roles = "Admin")]
     public class NguoiDungController : Controller
     {
         private readonly PetShopDbContext _context;

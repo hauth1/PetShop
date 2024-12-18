@@ -2,30 +2,33 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using SlugGenerator;
 using Microsoft.EntityFrameworkCore;
 using PetShop.Models;
+using SlugGenerator;
 
-namespace PetShop.Controllers
+namespace PetShop.Areas.Admin.Controllers
 {
-    public class LoaiSanPhamController : Controller
+    [Area("Admin")]
+    [Authorize(Roles = "Admin")]
+    public class TinhTrangController : Controller
     {
         private readonly PetShopDbContext _context;
 
-        public LoaiSanPhamController(PetShopDbContext context)
+        public TinhTrangController(PetShopDbContext context)
         {
             _context = context;
         }
 
-        // GET: LoaiSanPham
+        // GET: TinhTrang
         public async Task<IActionResult> Index()
         {
-            return View(await _context.LoaiSanPham.ToListAsync());
+            return View(await _context.TinhTrang.ToListAsync());
         }
 
-        // GET: LoaiSanPham/Details/5
+        // GET: TinhTrang/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -33,43 +36,43 @@ namespace PetShop.Controllers
                 return NotFound();
             }
 
-            var loaiSanPham = await _context.LoaiSanPham
+            var tinhTrang = await _context.TinhTrang
                 .FirstOrDefaultAsync(m => m.ID == id);
-            if (loaiSanPham == null)
+            if (tinhTrang == null)
             {
                 return NotFound();
             }
 
-            return View(loaiSanPham);
+            return View(tinhTrang);
         }
 
-        // GET: LoaiSanPham/Create
+        // GET: TinhTrang/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: LoaiSanPham/Create
+        // POST: TinhTrang/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ID,TenLoaiSP,TenLoaiSPKhongDau")] LoaiSanPham loaiSanPham)
+        public async Task<IActionResult> Create([Bind("ID,MoTa,MoTaKhongDau")] TinhTrang tinhTrang)
         {
             if (ModelState.IsValid)
             {
-                if (string.IsNullOrWhiteSpace(loaiSanPham.TenLoaiSPKhongDau))
+                if (string.IsNullOrWhiteSpace(tinhTrang.MoTaKhongDau))
                 {
-                    loaiSanPham.TenLoaiSPKhongDau = loaiSanPham.TenLoaiSP.GenerateSlug();
+                    tinhTrang.MoTaKhongDau = tinhTrang.MoTa.GenerateSlug();
                 }
-                _context.Add(loaiSanPham);
+                _context.Add(tinhTrang);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(loaiSanPham);
+            return View(tinhTrang);
         }
 
-        // GET: LoaiSanPham/Edit/5
+        // GET: TinhTrang/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -77,22 +80,22 @@ namespace PetShop.Controllers
                 return NotFound();
             }
 
-            var loaiSanPham = await _context.LoaiSanPham.FindAsync(id);
-            if (loaiSanPham == null)
+            var tinhTrang = await _context.TinhTrang.FindAsync(id);
+            if (tinhTrang == null)
             {
                 return NotFound();
             }
-            return View(loaiSanPham);
+            return View(tinhTrang);
         }
 
-        // POST: LoaiSanPham/Edit/5
+        // POST: TinhTrang/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ID,TenLoaiSP,TenLoaiSPKhongDau")] LoaiSanPham loaiSanPham)
+        public async Task<IActionResult> Edit(int id, [Bind("ID,MoTa,MoTaKhongDau")] TinhTrang tinhTrang)
         {
-            if (id != loaiSanPham.ID)
+            if (id != tinhTrang.ID)
             {
                 return NotFound();
             }
@@ -101,16 +104,16 @@ namespace PetShop.Controllers
             {
                 try
                 {
-                    if (string.IsNullOrWhiteSpace(loaiSanPham.TenLoaiSPKhongDau))
+                    if (string.IsNullOrWhiteSpace(tinhTrang.MoTaKhongDau))
                     {
-                        loaiSanPham.TenLoaiSPKhongDau = loaiSanPham.TenLoaiSP.GenerateSlug();
+                        tinhTrang.MoTaKhongDau = tinhTrang.MoTa.GenerateSlug();
                     }
-                    _context.Update(loaiSanPham);
+                    _context.Update(tinhTrang);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!LoaiSanPhamExists(loaiSanPham.ID))
+                    if (!TinhTrangExists(tinhTrang.ID))
                     {
                         return NotFound();
                     }
@@ -121,10 +124,10 @@ namespace PetShop.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(loaiSanPham);
+            return View(tinhTrang);
         }
 
-        // GET: LoaiSanPham/Delete/5
+        // GET: TinhTrang/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -132,34 +135,34 @@ namespace PetShop.Controllers
                 return NotFound();
             }
 
-            var loaiSanPham = await _context.LoaiSanPham
+            var tinhTrang = await _context.TinhTrang
                 .FirstOrDefaultAsync(m => m.ID == id);
-            if (loaiSanPham == null)
+            if (tinhTrang == null)
             {
                 return NotFound();
             }
 
-            return View(loaiSanPham);
+            return View(tinhTrang);
         }
 
-        // POST: LoaiSanPham/Delete/5
+        // POST: TinhTrang/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var loaiSanPham = await _context.LoaiSanPham.FindAsync(id);
-            if (loaiSanPham != null)
+            var tinhTrang = await _context.TinhTrang.FindAsync(id);
+            if (tinhTrang != null)
             {
-                _context.LoaiSanPham.Remove(loaiSanPham);
+                _context.TinhTrang.Remove(tinhTrang);
             }
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool LoaiSanPhamExists(int id)
+        private bool TinhTrangExists(int id)
         {
-            return _context.LoaiSanPham.Any(e => e.ID == id);
+            return _context.TinhTrang.Any(e => e.ID == id);
         }
     }
 }

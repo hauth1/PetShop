@@ -4,28 +4,31 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using SlugGenerator;
 using Microsoft.EntityFrameworkCore;
 using PetShop.Models;
+using Microsoft.AspNetCore.Authorization;
 
-namespace PetShop.Controllers
+namespace PetShop.Areas.Admin.Controllers
 {
-    public class DatHangController : Controller
+    [Area("Admin")]
+    [Authorize(Roles = "Admin")]
+    public class LoaiSanPhamController : Controller
     {
         private readonly PetShopDbContext _context;
 
-        public DatHangController(PetShopDbContext context)
+        public LoaiSanPhamController(PetShopDbContext context)
         {
             _context = context;
         }
 
-        // GET: DatHang
+        // GET: LoaiSanPham
         public async Task<IActionResult> Index()
         {
-            var petShopDbContext = _context.DatHang.Include(d => d.NguoiDung).Include(d => d.TinhTrang);
-            return View(await petShopDbContext.ToListAsync());
+            return View(await _context.LoaiSanPham.ToListAsync());
         }
 
-        // GET: DatHang/Details/5
+        // GET: LoaiSanPham/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -33,45 +36,43 @@ namespace PetShop.Controllers
                 return NotFound();
             }
 
-            var datHang = await _context.DatHang
-                .Include(d => d.NguoiDung)
-                .Include(d => d.TinhTrang)
+            var loaiSanPham = await _context.LoaiSanPham
                 .FirstOrDefaultAsync(m => m.ID == id);
-            if (datHang == null)
+            if (loaiSanPham == null)
             {
                 return NotFound();
             }
 
-            return View(datHang);
+            return View(loaiSanPham);
         }
 
-        // GET: DatHang/Create
+        // GET: LoaiSanPham/Create
         public IActionResult Create()
         {
-            ViewData["NguoiDungID"] = new SelectList(_context.NguoiDung, "ID", "HoVaTen");
-            ViewData["TinhTrangID"] = new SelectList(_context.TinhTrang, "ID", "MoTa");
             return View();
         }
 
-        // POST: DatHang/Create
+        // POST: LoaiSanPham/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ID,NguoiDungID,TinhTrangID,DienThoaiGiaoHang,DiaChiGiaoHang,NgayDatHang")] DatHang datHang)
+        public async Task<IActionResult> Create([Bind("ID,TenLoaiSP,TenLoaiSPKhongDau")] LoaiSanPham loaiSanPham)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(datHang);
+                if (string.IsNullOrWhiteSpace(loaiSanPham.TenLoaiSPKhongDau))
+                {
+                    loaiSanPham.TenLoaiSPKhongDau = loaiSanPham.TenLoaiSP.GenerateSlug();
+                }
+                _context.Add(loaiSanPham);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["NguoiDungID"] = new SelectList(_context.NguoiDung, "ID", "HoVaTen", datHang.NguoiDungID);
-            ViewData["TinhTrangID"] = new SelectList(_context.TinhTrang, "ID", "MoTa", datHang.TinhTrangID);
-            return View(datHang);
+            return View(loaiSanPham);
         }
 
-        // GET: DatHang/Edit/5
+        // GET: LoaiSanPham/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -79,24 +80,22 @@ namespace PetShop.Controllers
                 return NotFound();
             }
 
-            var datHang = await _context.DatHang.FindAsync(id);
-            if (datHang == null)
+            var loaiSanPham = await _context.LoaiSanPham.FindAsync(id);
+            if (loaiSanPham == null)
             {
                 return NotFound();
             }
-            ViewData["NguoiDungID"] = new SelectList(_context.NguoiDung, "ID", "HoVaTen", datHang.NguoiDungID);
-            ViewData["TinhTrangID"] = new SelectList(_context.TinhTrang, "ID", "MoTa", datHang.TinhTrangID);
-            return View(datHang);
+            return View(loaiSanPham);
         }
 
-        // POST: DatHang/Edit/5
+        // POST: LoaiSanPham/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ID,NguoiDungID,TinhTrangID,DienThoaiGiaoHang,DiaChiGiaoHang,NgayDatHang")] DatHang datHang)
+        public async Task<IActionResult> Edit(int id, [Bind("ID,TenLoaiSP,TenLoaiSPKhongDau")] LoaiSanPham loaiSanPham)
         {
-            if (id != datHang.ID)
+            if (id != loaiSanPham.ID)
             {
                 return NotFound();
             }
@@ -105,12 +104,16 @@ namespace PetShop.Controllers
             {
                 try
                 {
-                    _context.Update(datHang);
+                    if (string.IsNullOrWhiteSpace(loaiSanPham.TenLoaiSPKhongDau))
+                    {
+                        loaiSanPham.TenLoaiSPKhongDau = loaiSanPham.TenLoaiSP.GenerateSlug();
+                    }
+                    _context.Update(loaiSanPham);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!DatHangExists(datHang.ID))
+                    if (!LoaiSanPhamExists(loaiSanPham.ID))
                     {
                         return NotFound();
                     }
@@ -121,12 +124,10 @@ namespace PetShop.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["NguoiDungID"] = new SelectList(_context.NguoiDung, "ID", "HoVaTen", datHang.NguoiDungID);
-            ViewData["TinhTrangID"] = new SelectList(_context.TinhTrang, "ID", "MoTa", datHang.TinhTrangID);
-            return View(datHang);
+            return View(loaiSanPham);
         }
 
-        // GET: DatHang/Delete/5
+        // GET: LoaiSanPham/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -134,36 +135,34 @@ namespace PetShop.Controllers
                 return NotFound();
             }
 
-            var datHang = await _context.DatHang
-                .Include(d => d.NguoiDung)
-                .Include(d => d.TinhTrang)
+            var loaiSanPham = await _context.LoaiSanPham
                 .FirstOrDefaultAsync(m => m.ID == id);
-            if (datHang == null)
+            if (loaiSanPham == null)
             {
                 return NotFound();
             }
 
-            return View(datHang);
+            return View(loaiSanPham);
         }
 
-        // POST: DatHang/Delete/5
+        // POST: LoaiSanPham/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var datHang = await _context.DatHang.FindAsync(id);
-            if (datHang != null)
+            var loaiSanPham = await _context.LoaiSanPham.FindAsync(id);
+            if (loaiSanPham != null)
             {
-                _context.DatHang.Remove(datHang);
+                _context.LoaiSanPham.Remove(loaiSanPham);
             }
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool DatHangExists(int id)
+        private bool LoaiSanPhamExists(int id)
         {
-            return _context.DatHang.Any(e => e.ID == id);
+            return _context.LoaiSanPham.Any(e => e.ID == id);
         }
     }
 }

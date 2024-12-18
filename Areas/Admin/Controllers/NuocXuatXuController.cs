@@ -2,30 +2,33 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using PetShop.Models;
 using SlugGenerator;
 
-namespace PetShop.Controllers
+namespace PetShop.Areas.Admin.Controllers
 {
-    public class LoaiThuCungController : Controller
+    [Area("Admin")]
+    [Authorize(Roles = "Admin")]
+    public class NuocXuatXuController : Controller
     {
         private readonly PetShopDbContext _context;
 
-        public LoaiThuCungController(PetShopDbContext context)
+        public NuocXuatXuController(PetShopDbContext context)
         {
             _context = context;
         }
 
-        // GET: LoaiThuCung
+        // GET: NuocXuatXu
         public async Task<IActionResult> Index()
         {
-            return View(await _context.LoaiThuCung.ToListAsync());
+            return View(await _context.NuocXuatXu.ToListAsync());
         }
 
-        // GET: LoaiThuCung/Details/5
+        // GET: NuocXuatXu/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -33,43 +36,43 @@ namespace PetShop.Controllers
                 return NotFound();
             }
 
-            var loaiThuCung = await _context.LoaiThuCung
+            var nuocXuatXu = await _context.NuocXuatXu
                 .FirstOrDefaultAsync(m => m.ID == id);
-            if (loaiThuCung == null)
+            if (nuocXuatXu == null)
             {
                 return NotFound();
             }
 
-            return View(loaiThuCung);
+            return View(nuocXuatXu);
         }
 
-        // GET: LoaiThuCung/Create
+        // GET: NuocXuatXu/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: LoaiThuCung/Create
+        // POST: NuocXuatXu/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ID,TenLoaiTC,TenLoaiTCKhongDau")] LoaiThuCung loaiThuCung)
+        public async Task<IActionResult> Create([Bind("ID,TenNuocXuatXu,TenNuocXuatXuKhongDau")] NuocXuatXu nuocXuatXu)
         {
             if (ModelState.IsValid)
             {
-                if (string.IsNullOrWhiteSpace(loaiThuCung.TenLoaiTCKhongDau))
+                if (string.IsNullOrWhiteSpace(nuocXuatXu.TenNuocXuatXuKhongDau))
                 {
-                    loaiThuCung.TenLoaiTCKhongDau = loaiThuCung.TenLoaiTC.GenerateSlug();
+                    nuocXuatXu.TenNuocXuatXuKhongDau = nuocXuatXu.TenNuocXuatXu.GenerateSlug();
                 }
-                _context.Add(loaiThuCung);
+                _context.Add(nuocXuatXu);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(loaiThuCung);
+            return View(nuocXuatXu);
         }
 
-        // GET: LoaiThuCung/Edit/5
+        // GET: NuocXuatXu/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -77,22 +80,22 @@ namespace PetShop.Controllers
                 return NotFound();
             }
 
-            var loaiThuCung = await _context.LoaiThuCung.FindAsync(id);
-            if (loaiThuCung == null)
+            var nuocXuatXu = await _context.NuocXuatXu.FindAsync(id);
+            if (nuocXuatXu == null)
             {
                 return NotFound();
             }
-            return View(loaiThuCung);
+            return View(nuocXuatXu);
         }
 
-        // POST: LoaiThuCung/Edit/5
+        // POST: NuocXuatXu/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ID,TenLoaiTC,TenLoaiTCKhongDau")] LoaiThuCung loaiThuCung)
+        public async Task<IActionResult> Edit(int id, [Bind("ID,TenNuocXuatXu,TenNuocXuatXuKhongDau")] NuocXuatXu nuocXuatXu)
         {
-            if (id != loaiThuCung.ID)
+            if (id != nuocXuatXu.ID)
             {
                 return NotFound();
             }
@@ -101,16 +104,16 @@ namespace PetShop.Controllers
             {
                 try
                 {
-                    if (string.IsNullOrWhiteSpace(loaiThuCung.TenLoaiTCKhongDau))
+                    if (string.IsNullOrWhiteSpace(nuocXuatXu.TenNuocXuatXuKhongDau))
                     {
-                        loaiThuCung.TenLoaiTCKhongDau = loaiThuCung.TenLoaiTC.GenerateSlug();
+                        nuocXuatXu.TenNuocXuatXuKhongDau = nuocXuatXu.TenNuocXuatXu.GenerateSlug();
                     }
-                    _context.Update(loaiThuCung);
+                    _context.Update(nuocXuatXu);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!LoaiThuCungExists(loaiThuCung.ID))
+                    if (!NuocXuatXuExists(nuocXuatXu.ID))
                     {
                         return NotFound();
                     }
@@ -121,10 +124,10 @@ namespace PetShop.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(loaiThuCung);
+            return View(nuocXuatXu);
         }
 
-        // GET: LoaiThuCung/Delete/5
+        // GET: NuocXuatXu/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -132,34 +135,34 @@ namespace PetShop.Controllers
                 return NotFound();
             }
 
-            var loaiThuCung = await _context.LoaiThuCung
+            var nuocXuatXu = await _context.NuocXuatXu
                 .FirstOrDefaultAsync(m => m.ID == id);
-            if (loaiThuCung == null)
+            if (nuocXuatXu == null)
             {
                 return NotFound();
             }
 
-            return View(loaiThuCung);
+            return View(nuocXuatXu);
         }
 
-        // POST: LoaiThuCung/Delete/5
+        // POST: NuocXuatXu/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var loaiThuCung = await _context.LoaiThuCung.FindAsync(id);
-            if (loaiThuCung != null)
+            var nuocXuatXu = await _context.NuocXuatXu.FindAsync(id);
+            if (nuocXuatXu != null)
             {
-                _context.LoaiThuCung.Remove(loaiThuCung);
+                _context.NuocXuatXu.Remove(nuocXuatXu);
             }
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool LoaiThuCungExists(int id)
+        private bool NuocXuatXuExists(int id)
         {
-            return _context.LoaiThuCung.Any(e => e.ID == id);
+            return _context.NuocXuatXu.Any(e => e.ID == id);
         }
     }
 }

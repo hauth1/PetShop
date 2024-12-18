@@ -7,9 +7,12 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SlugGenerator;
 using PetShop.Models;
+using Microsoft.AspNetCore.Authorization;
 
-namespace PetShop.Controllers
+namespace PetShop.Areas.Admin.Controllers
 {
+    [Area("Admin")]
+    [Authorize(Roles = "Admin")]
     public class SanPhamController : Controller
     {
         private readonly PetShopDbContext _context;

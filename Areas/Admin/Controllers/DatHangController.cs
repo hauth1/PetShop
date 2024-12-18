@@ -2,30 +2,33 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using PetShop.Models;
-using SlugGenerator;
 
-namespace PetShop.Controllers
+namespace PetShop.Areas.Admin.Controllers
 {
-    public class TinhTrangController : Controller
+    [Area("Admin")]
+    [Authorize(Roles = "Admin")]
+    public class DatHangController : Controller
     {
         private readonly PetShopDbContext _context;
 
-        public TinhTrangController(PetShopDbContext context)
+        public DatHangController(PetShopDbContext context)
         {
             _context = context;
         }
 
-        // GET: TinhTrang
+        // GET: DatHang
         public async Task<IActionResult> Index()
         {
-            return View(await _context.TinhTrang.ToListAsync());
+            var petShopDbContext = _context.DatHang.Include(d => d.NguoiDung).Include(d => d.TinhTrang);
+            return View(await petShopDbContext.ToListAsync());
         }
 
-        // GET: TinhTrang/Details/5
+        // GET: DatHang/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -33,43 +36,45 @@ namespace PetShop.Controllers
                 return NotFound();
             }
 
-            var tinhTrang = await _context.TinhTrang
+            var datHang = await _context.DatHang
+                .Include(d => d.NguoiDung)
+                .Include(d => d.TinhTrang)
                 .FirstOrDefaultAsync(m => m.ID == id);
-            if (tinhTrang == null)
+            if (datHang == null)
             {
                 return NotFound();
             }
 
-            return View(tinhTrang);
+            return View(datHang);
         }
 
-        // GET: TinhTrang/Create
+        // GET: DatHang/Create
         public IActionResult Create()
         {
+            ViewData["NguoiDungID"] = new SelectList(_context.NguoiDung, "ID", "HoVaTen");
+            ViewData["TinhTrangID"] = new SelectList(_context.TinhTrang, "ID", "MoTa");
             return View();
         }
 
-        // POST: TinhTrang/Create
+        // POST: DatHang/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ID,MoTa,MoTaKhongDau")] TinhTrang tinhTrang)
+        public async Task<IActionResult> Create([Bind("ID,NguoiDungID,TinhTrangID,DienThoaiGiaoHang,DiaChiGiaoHang,NgayDatHang")] DatHang datHang)
         {
             if (ModelState.IsValid)
             {
-                if (string.IsNullOrWhiteSpace(tinhTrang.MoTaKhongDau))
-                {
-                    tinhTrang.MoTaKhongDau = tinhTrang.MoTa.GenerateSlug();
-                }
-                _context.Add(tinhTrang);
+                _context.Add(datHang);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(tinhTrang);
+            ViewData["NguoiDungID"] = new SelectList(_context.NguoiDung, "ID", "HoVaTen", datHang.NguoiDungID);
+            ViewData["TinhTrangID"] = new SelectList(_context.TinhTrang, "ID", "MoTa", datHang.TinhTrangID);
+            return View(datHang);
         }
 
-        // GET: TinhTrang/Edit/5
+        // GET: DatHang/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -77,22 +82,24 @@ namespace PetShop.Controllers
                 return NotFound();
             }
 
-            var tinhTrang = await _context.TinhTrang.FindAsync(id);
-            if (tinhTrang == null)
+            var datHang = await _context.DatHang.FindAsync(id);
+            if (datHang == null)
             {
                 return NotFound();
             }
-            return View(tinhTrang);
+            ViewData["NguoiDungID"] = new SelectList(_context.NguoiDung, "ID", "HoVaTen", datHang.NguoiDungID);
+            ViewData["TinhTrangID"] = new SelectList(_context.TinhTrang, "ID", "MoTa", datHang.TinhTrangID);
+            return View(datHang);
         }
 
-        // POST: TinhTrang/Edit/5
+        // POST: DatHang/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ID,MoTa,MoTaKhongDau")] TinhTrang tinhTrang)
+        public async Task<IActionResult> Edit(int id, [Bind("ID,NguoiDungID,TinhTrangID,DienThoaiGiaoHang,DiaChiGiaoHang,NgayDatHang")] DatHang datHang)
         {
-            if (id != tinhTrang.ID)
+            if (id != datHang.ID)
             {
                 return NotFound();
             }
@@ -101,16 +108,12 @@ namespace PetShop.Controllers
             {
                 try
                 {
-                    if (string.IsNullOrWhiteSpace(tinhTrang.MoTaKhongDau))
-                    {
-                        tinhTrang.MoTaKhongDau = tinhTrang.MoTa.GenerateSlug();
-                    }
-                    _context.Update(tinhTrang);
+                    _context.Update(datHang);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!TinhTrangExists(tinhTrang.ID))
+                    if (!DatHangExists(datHang.ID))
                     {
                         return NotFound();
                     }
@@ -121,10 +124,12 @@ namespace PetShop.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(tinhTrang);
+            ViewData["NguoiDungID"] = new SelectList(_context.NguoiDung, "ID", "HoVaTen", datHang.NguoiDungID);
+            ViewData["TinhTrangID"] = new SelectList(_context.TinhTrang, "ID", "MoTa", datHang.TinhTrangID);
+            return View(datHang);
         }
 
-        // GET: TinhTrang/Delete/5
+        // GET: DatHang/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -132,34 +137,36 @@ namespace PetShop.Controllers
                 return NotFound();
             }
 
-            var tinhTrang = await _context.TinhTrang
+            var datHang = await _context.DatHang
+                .Include(d => d.NguoiDung)
+                .Include(d => d.TinhTrang)
                 .FirstOrDefaultAsync(m => m.ID == id);
-            if (tinhTrang == null)
+            if (datHang == null)
             {
                 return NotFound();
             }
 
-            return View(tinhTrang);
+            return View(datHang);
         }
 
-        // POST: TinhTrang/Delete/5
+        // POST: DatHang/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var tinhTrang = await _context.TinhTrang.FindAsync(id);
-            if (tinhTrang != null)
+            var datHang = await _context.DatHang.FindAsync(id);
+            if (datHang != null)
             {
-                _context.TinhTrang.Remove(tinhTrang);
+                _context.DatHang.Remove(datHang);
             }
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool TinhTrangExists(int id)
+        private bool DatHangExists(int id)
         {
-            return _context.TinhTrang.Any(e => e.ID == id);
+            return _context.DatHang.Any(e => e.ID == id);
         }
     }
 }
