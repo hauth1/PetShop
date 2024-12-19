@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using PetShop.Logic;
 using PetShop.Models;
 
 namespace PetShop
@@ -29,6 +30,10 @@ namespace PetShop
                 options.Cookie.Name = "PetShop.Session";
                 options.IdleTimeout = TimeSpan.FromMinutes(15);
             });
+            builder.Services.AddTransient<IMailLogic, MailLogic>();
+
+            
+            builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

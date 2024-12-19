@@ -98,5 +98,42 @@ namespace PetShop.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+        // GET: Register 
+        [AllowAnonymous]
+        public IActionResult Register(string? successMessage)
+        {
+            if (!string.IsNullOrEmpty(successMessage))
+                TempData["ThongBao"] = successMessage;
+            return View();
+        }
+
+        // POST: Register 
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> Register([Bind("ID,HoVaTen,Email,DienThoai,DiaChi,TenDangNhap,MatKhau,XacNhanMatKhau")] NguoiDung nguoiDung)
+        {
+            if (ModelState.IsValid)
+            {
+                var kiemTra = _context.NguoiDung.Where(r => r.TenDangNhap == nguoiDung.TenDangNhap).SingleOrDefault();
+                if (kiemTra == null)
+                {
+                    nguoiDung.MatKhau = BC.HashPassword(nguoiDung.MatKhau);
+                    nguoiDung.XacNhanMatKhau = BC.HashPassword(nguoiDung.MatKhau);
+                    nguoiDung.Quyen = false; // Khách hàng 
+
+                    _context.Add(nguoiDung);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction("Register", "Home", new { Area = "", successMessage = "Đăng ký tài khoản thành công." });
+                }
+                else
+
+
+                {
+                    TempData["ThongBaoLoi"] = "Tên đăng nhập này đã được sử dụng cho một tài khoản khác.";
+                    return View(nguoiDung);
+                }
+            }
+            return View(nguoiDung);
+        }
     }
 }
