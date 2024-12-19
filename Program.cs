@@ -24,6 +24,11 @@ namespace PetShop
                 options.LogoutPath = "/Home/Logout"; options.AccessDeniedPath = "/Home/Forbidden";
             });
             builder.Services.AddHttpContextAccessor();
+            builder.Services.AddDistributedMemoryCache();
+            builder.Services.AddSession(options => {
+                options.Cookie.Name = "PetShop.Session";
+                options.IdleTimeout = TimeSpan.FromMinutes(15);
+            });
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -40,7 +45,7 @@ namespace PetShop
             app.UseRouting();
 
             app.UseAuthorization();
-
+            app.UseSession();
             app.MapControllerRoute(name: "adminareas",
                 pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
             app.MapControllerRoute(

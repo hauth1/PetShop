@@ -6,6 +6,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using PetShop.Models;
 using BC = BCrypt.Net.BCrypt;
+using Microsoft.EntityFrameworkCore;
 
 namespace PetShop.Controllers
 {
@@ -18,12 +19,17 @@ namespace PetShop.Controllers
             _context = context;
             _httpContextAccessor = httpContextAccessor;
         }
+        public async Task<IActionResult> Index()
+        {
+            var loaiSanPham = await _context.LoaiSanPham.Include(s => s.SanPham).ToListAsync();
+            return View(loaiSanPham);
+        }
 
-        public IActionResult Index()
+        /*public IActionResult Index()
         {
             return View();
         }
-        //dàgasfghjagfgg
+        */
         // GET: Login
         [AllowAnonymous]
         public IActionResult Login(string? ReturnUrl)
